@@ -1,14 +1,12 @@
-const END_MESSAGES = ['stop','no','end']
-
 async function getAnswers(client, channel,questions){
     return new Promise(async (resolve, reject) => {
 
-        const filter = m => !!m.content;
         let answers = []
 
         for (const question of questions) {
             await channel.send(question)
             try {
+                const filter = m => !!m.content;
                 const collected = await channel.awaitMessages({ filter, max: 1, time: 60000, errors: ['time'] })
 
                 // if message is "stop", end session

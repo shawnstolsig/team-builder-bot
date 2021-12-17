@@ -1,6 +1,6 @@
 const config = require("../config.js");
 const { settings } = require("../modules/settings.js");
-const { getAnswers } = require("../modules/messaging");
+const { startDraft } = require("../modules/draft");
 const logger = require("../modules/Logger");
 
 exports.run = async (client, message, [sessionType, ...values], level) => {
@@ -13,9 +13,10 @@ exports.run = async (client, message, [sessionType, ...values], level) => {
     }
 
     message.reply({ content: `You've started a ${sessionType} team building session.`, allowedMentions: { repliedUser: (replying === "true") }});
+    logger.log(`Started team building session: ${sessionType}`)
 
     if(sessionType === 'draft'){
-        await startDraft(client, message.channel)
+        await startDraft(message.channel)
     }
 };
 
@@ -33,13 +34,4 @@ exports.help = {
     usage: "start <type of teams>"
 };
 
-async function startDraft(client, channel){
-    const questions = ['Hello, how are you?', 'Whats your name?', 'Where you from?']
-    try {
-        const answers = await getAnswers(client, channel, questions)
-        logger.log(answers)
-    }
-    catch (e){
-        logger.log(e, 'warn')
-    }
-}
+
