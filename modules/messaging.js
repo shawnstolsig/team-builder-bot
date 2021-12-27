@@ -1,3 +1,41 @@
+const logger = require('../modules/Logger');
+const {drafts} = require("../modules/enmaps");
+
+async function postEmbed({guild, channel, title, description, fields = [] }){
+    return new Promise(async (resolve, reject) => {
+        const stored = drafts.get(guild.id)
+
+        if(!channel){
+            try {
+                channel = await guild.channels.fetch(stored.eventChannel.id)
+            }
+            catch (e) {
+                logger.log(`Unable to find eventChannel in postEmbed(): ${e}`, 'error')
+            }
+        }
+
+        if(stored?.eventName){
+            title = `**${stored.eventName}**: ${title} `
+        }
+
+        const embed = {
+            color: 0x990000,
+            title,
+            description: description ? description : undefined,
+            fields: fields.length ? fields : undefined
+        }
+        try {
+            const post = await channel.send({ embeds: [embed] });
+            resolve(post)
+        } catch (e) {
+            logger.log(e, 'error')
+            reject(e)
+        }
+
+    })
+
+}
+
 async function getAnswers(client, channel,questions){
     return new Promise(async (resolve, reject) => {
 
@@ -30,4 +68,5 @@ async function getAnswers(client, channel,questions){
 
 module.exports = {
     getAnswers,
+    postEmbed
 }

@@ -1,4 +1,4 @@
-const {getAnswers} = require("../modules/messaging");
+const {getAnswers, postEmbed} = require("../modules/messaging");
 const logger = require("../modules/Logger");
 const { drafts } = require("../modules/enmaps");
 const { END_MESSAGES } = require("../modules/constants");
