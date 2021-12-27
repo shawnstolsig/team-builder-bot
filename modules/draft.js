@@ -23,7 +23,7 @@ async function startDraft(channel){
 
 function createTeams(channel) {
     return new Promise(async (resolve, reject) => {
-        await channel.send(`Team captains, please respond one at a time with your team name.  Anyone can type "stop" to end this process.`)
+        await channel.send(`Team captains, please respond one at a time to register a team.  Anyone can type "stop" to end this process.`)
 
         let teams = []
         let teamBuildingInProgress = true
@@ -44,9 +44,10 @@ function createTeams(channel) {
                     const res = collected.first()
                     teams.push({
                         captain: res.member,
-                        name: res.content
+                        name:  res.member.displayName,
+                        players: [res.member]
                     })
-                    await channel.send(`${res.author} created team **${res.content}**`)
+                    await channel.send(`Team ${res.member.displayName} created!`)
                 }
             } catch (err) {
                 teamBuildingInProgress = false
