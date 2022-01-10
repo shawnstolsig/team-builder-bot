@@ -28,10 +28,7 @@ exports.run = async (client, message, [whatToClear, ...values], level) => {
         return
     }
     else {
-        drafts.set(message.channel.guild.id,{
-            ...stored,
-            [whatToClear]: undefined
-        })
+        drafts.set(message.channel.guild.id,undefined,whatToClear)
         message.channel.send(`**${whatToClear}** cleared.`)
     }
 

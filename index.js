@@ -5,7 +5,10 @@ const { readdirSync } = require("fs");
 const { intents, partials, permLevels } = require("./config.js");
 const logger = require("./modules/Logger.js");
 
+const { drafts } = require("./modules/enmaps")
+
 const client = new Client({ intents, partials });
+client.drafts = drafts
 
 // Aliases, commands and slash commands are put in collections where they can be
 // read from, catalogued, listed, etc.

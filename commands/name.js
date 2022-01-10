@@ -23,10 +23,7 @@ exports.run = async (client, message, name, level) => {
 
     try {
         const eventName = name.join(' ')
-        drafts.set(message.channel.guild.id,{
-            ...stored,
-            eventName
-        })
+        drafts.set(message.channel.guild.id, eventName, "eventName")
         await postEmbed({
             guild: message.guild,
             channel: message.channel,

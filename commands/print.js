@@ -19,7 +19,7 @@ exports.run = async (client, message, [whatToPrint, ...values], level) => {
         return
     }
     else if (whatToPrint === 'all'){
-        message.channel.send(JSON.stringify(stored,null,4));
+        console.log(JSON.stringify(stored,null,4));
         return
     }
     else if (!stored?.[whatToPrint]){
@@ -27,12 +27,13 @@ exports.run = async (client, message, [whatToPrint, ...values], level) => {
         return
     }
     else if (whatToPrint === 'teams'){
+        // convert this to leverage postEmbed()
         const embed = {
             color: 0x990000,
             title: 'Teams',
             fields: stored.teams.map(team => ({
                 name: `Team ${team.name}`,
-                value: team.players.map(player => player.displayName).join('\n')
+                value: team.players.map(player => player.name).join('\n')
             }))
         }
         message.channel.send({ embeds: [embed] });

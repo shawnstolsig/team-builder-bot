@@ -60,15 +60,15 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
 exports.conf = {
     enabled: true,
     guildOnly: true,
-    aliases: ["begin", "init", "initiate", "s"],
+    aliases: ["complete", "end", "f", "stop"],
     permLevel: "Administrator"
 };
 
 exports.help = {
-    name: "start",
+    name: "finish",
     category: "Team Building",
-    description: "Starts one of the draft events.",
-    usage: "start <teams, players, draft>"
+    description: "Finishes one of the draft events.",
+    usage: "finish <teams, players, draft>"
 };
 
 

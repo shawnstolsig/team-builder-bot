@@ -7,7 +7,7 @@ async function postEmbed({guild, channel, title, description, fields = [] }){
 
         if(!channel){
             try {
-                channel = await guild.channels.fetch(stored.eventChannel.id)
+                channel = await guild.channels.fetch(stored?.eventChannel.id)
             }
             catch (e) {
                 logger.log(`Unable to find eventChannel in postEmbed(): ${e}`, 'error')
@@ -24,6 +24,7 @@ async function postEmbed({guild, channel, title, description, fields = [] }){
             description: description ? description : undefined,
             fields: fields.length ? fields : undefined
         }
+
         try {
             const post = await channel.send({ embeds: [embed] });
             resolve(post)

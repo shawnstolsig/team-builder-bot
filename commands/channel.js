@@ -23,10 +23,7 @@ exports.run = async (client, message, [channelId, ...values], level) => {
 
     try {
         const channel = await message.guild.channels.fetch(channelId)
-        drafts.set(message.channel.guild.id,{
-            ...stored,
-            eventChannel: channel
-        })
+        drafts.set(message.channel.guild.id, {id: channel.id, name: channel.name}, "eventChannel")
         await postEmbed({
             guild: message.guild,
             channel: message.channel,
@@ -36,7 +33,7 @@ exports.run = async (client, message, [channelId, ...values], level) => {
         logger.log(`Event channel set: ${channelId}`)
     } catch (e) {
         logger.log(e,'warn')
-        message.channel.send(`Could not find channel with that ID, please try again.`)
+        message.channel.send(`Could not find channel with that ID, please try again.  Please ensure you are referencing the channel with the 18=digit channel ID.`)
     }
 
 };
