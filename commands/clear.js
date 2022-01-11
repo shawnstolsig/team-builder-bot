@@ -28,7 +28,7 @@ exports.run = async (client, message, [whatToClear, ...values], level) => {
         return
     }
     else {
-        drafts.set(message.channel.guild.id,undefined,whatToClear)
+        drafts.delete(message.channel.guild.id,whatToClear)
         message.channel.send(`**${whatToClear}** cleared.`)
     }
 

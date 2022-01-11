@@ -30,7 +30,7 @@ exports.run = async (client, message, [thingToAdd, userId, ...values], level) =>
                     id: member.id,
                     name: member.displayName,
                     captain: {id: member.id, name: member.displayName},
-                    players: [{id: member.id, name: member.displayName}]
+                    players: []
                 },
                 'teams'
             )

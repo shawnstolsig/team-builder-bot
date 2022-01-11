@@ -14,16 +14,12 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
     if(!draftEvent){
         message.reply({ content: `What do you want to start?  Please try again.`, allowedMentions: { repliedUser: (replying === "true") }});
     }
-    else if(!stored?.eventChannel.id){
+    else if(!stored?.eventChannel?.id){
         message.reply({ content: `Please use the **channel** command to set an event text channel first.`, allowedMentions: { repliedUser: (replying === "true") }});
     }
 
     // team building command: 'teams'
     else if (draftEvent === 'teams'){
-        logger.log(`Started: ${draftEvent}`)
-
-        message.reply({ content: `You've started a team building session.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
-
         const startMessage = await postEmbed({
             guild: message.guild,
             title: `Team Creation`,
@@ -32,22 +28,26 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
         drafts.set(message.channel.guild.id, [], "teams")
         drafts.set(message.channel.guild.id, {id: startMessage.id, createdAt: startMessage.createdTimestamp}, "captainMessage")
 
+        message.reply({ content: `You've started a team building session.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
+        logger.log(`Started: Team building`)
     }
 
-    // team building command: 'teams'
+    // player signup command: 'players'
     else if (draftEvent === 'players'){
-        logger.log(`Started: ${draftEvent}`)
-
-        message.reply({ content: `You've opened player signup.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
-
         const startMessage = await postEmbed({
             guild: message.guild,
             title: `Player Signup`,
-            description: 'Players: Please react to this message to register yourself as a player for the upcoming draft!!'
+            description: 'Players: Please react to this message to register yourself as a player for the upcoming draft!'
         })
         drafts.set(message.channel.guild.id, [], "players")
         drafts.set(message.channel.guild.id, {id: startMessage.id, createdAt: startMessage.createdTimestamp}, "playerMessage")
 
+        message.reply({ content: `You've opened player signup.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
+        logger.log(`Started: Player signups`)
+    }
+
+    else if (draftEvent === 'draft'){
+        // CODE HERE
     }
 
     // catch all error message
