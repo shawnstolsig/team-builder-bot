@@ -3,6 +3,7 @@ const { settings } = require("../modules/settings.js");
 const { startDraft } = require("../modules/draft");
 const logger = require("../modules/Logger");
 
+const {END_MESSAGES} = require("../modules/constants");
 const {drafts} = require("../modules/enmaps");
 const {postEmbed} = require("../modules/messaging");
 
@@ -20,29 +21,111 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
 
     // team building command: 'teams'
     else if (draftEvent === 'teams'){
-        const startMessage = await postEmbed({
-            guild: message.guild,
-            title: `Team Creation`,
-            description: 'Team captains: React to this message to register your team for the upcoming draft!'
-        })
-        drafts.set(message.channel.guild.id, [], "teams")
-        drafts.set(message.channel.guild.id, {id: startMessage.id, createdAt: startMessage.createdTimestamp}, "captainMessage")
-
-        message.reply({ content: `You've started a team building session.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
         logger.log(`Started: Team building`)
+
+        // abort if player signup hasn't started
+        if (!stored?.players?.length) {
+            message.reply({ content: `Unable to create teams...player signup is not yet complete!`, allowedMentions: {repliedUser: (replying === "true")} });
+            return
+        }
+
+        // get all players who registered to be a captain
+        const signedUpCaptains = stored.players.filter(player => player.role === 'captain')
+
+        // admins will select captains using comma separated index value
+        await postEmbed({
+            guild: message.guild,
+            channel: message.channel,
+            title: `Team Creation - Started`,
+            description: `The following players signed up as Team Captains....who should get a team? Respond with each captain's number, separated by commas.\n\n*Bot will only respond to input from **${message.member.displayName}**.*\n\n${signedUpCaptains.map((player,i) => `**#${i + 1}:** ${player.name}`).join('\n')}`,
+        })
+
+        try {
+            // only respond to the admin who ran the 'start teams' command
+            const filter = m => m.author === message.author;
+            const collected = await message.channel.awaitMessages({ filter, max: 1, time: 60000, errors: ['time'] })
+
+            // split out reponse into an array
+            const selectedCaptainIds = collected.first().content.split(",")
+
+            // get a team list, based on user input index values
+            const teams = selectedCaptainIds.map(id => {
+                const captain = signedUpCaptains.find((player,i) => i == id - 1)
+                if(!captain) return false;
+                return {
+                    id: captain.id,
+                    name: captain.name,
+                    captain,
+                    deputies: [],
+                    players: []
+                }
+            })
+
+            // demote the non-selected captains to Deputy
+            const notSelectedCaptains = signedUpCaptains.filter(player => !teams.map(team => team.captain.id).includes(player.id))
+            notSelectedCaptains.forEach(captain => {
+                const p = stored.players.find(player => player.id === captain.id)
+                p.role = 'deputy'
+            })
+
+            // update the selected captain teams
+            stored.players.filter(player => player.role === 'captain').forEach(captain => {
+                captain.team = captain.id
+            })
+
+            // post both players and teams to enmap/db
+            drafts.set(message.channel.guild.id, teams, "teams")
+            drafts.set(message.channel.guild.id, stored.players, "players")
+
+            // post result message
+            await postEmbed({
+                guild: message.guild,
+                channel: message.channel,
+                title: `Team Creation - Completed`,
+                description: `Results:`,
+                fields: [
+                    {name: "Confirmed Teams :white_check_mark::", value: teams.length ? teams.map(team => team.name).join('\n') : '(none)', inline: true},
+                    {name: "Converted to Deputy :arrow_double_down::", value: notSelectedCaptains.length ? notSelectedCaptains.map(player => player.name).join('\n') : '(none)', inline: true},
+                ]
+            })
+            logger.log(`Completed: Team building`)
+
+        } catch (e) {
+            logger.log(e,'warn')
+            message.channel.send(`Team creation aborted/timed out.`)
+        }
+
     }
 
     // player signup command: 'players'
     else if (draftEvent === 'players'){
+        const responseMessage = await message.reply({ content: `Posting player signup message...`, allowedMentions: { repliedUser: (replying === "true") }});
+
+        // post a message that members will react to, based on their desired participation role
         const startMessage = await postEmbed({
             guild: message.guild,
             title: `Player Signup`,
-            description: 'Players: Please react to this message to register yourself as a player for the upcoming draft!'
+            description: "**Please react to this message if you'd to participate!**\n\n**Note:** *Team Captains and Deputies should be available to participate on both days of the competition.*",
+            fields: [
+                { name: '\u200B', value: '\u200B' },
+                { name: 'Team Captain', value: ":crown:" , inline: true },
+                { name: 'Deputy', value: ":police_officer:" , inline: true },
+                { name: 'Player', value: ":two: - both days\n:regional_indicator_s: - Saturday only\n:regional_indicator_u: - Sunday only" , inline: true },
+            ]
         })
+
+        // add the emoji so that it's easy for people to respond
+        await startMessage.react('👑')
+        await startMessage.react('👮')
+        await startMessage.react('2️⃣')
+        await startMessage.react('🇸')
+        await startMessage.react('🇺')
+
+        // update db/enmap
         drafts.set(message.channel.guild.id, [], "players")
         drafts.set(message.channel.guild.id, {id: startMessage.id, createdAt: startMessage.createdTimestamp}, "playerMessage")
 
-        message.reply({ content: `You've opened player signup.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
+        responseMessage.edit({ content: `You've opened player signup.  View your post in the **${stored.eventChannel.name}** text channel.`, allowedMentions: { repliedUser: (replying === "true") }});
         logger.log(`Started: Player signups`)
     }
 
