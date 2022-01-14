@@ -130,7 +130,28 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
     }
 
     else if (draftEvent === 'draft'){
-        // CODE HERE
+        // abort if not enough players
+        if (!stored?.players?.length > 1) {
+            message.reply({ content: `Unable to create teams...not enough players!`, allowedMentions: {repliedUser: (replying === "true")} });
+            return
+        }
+        // abort if not enough teams
+        else if (!stored?.teams?.length > 1) {
+            message.reply({ content: `Unable to create teams...not enough teams!`, allowedMentions: {repliedUser: (replying === "true")} });
+            return
+        }
+
+        // post message to confirm draft started
+        const responseMessage = await message.reply({
+            content: `Starting draft....`,
+            allowedMentions: {repliedUser: (replying === "true")}
+        })
+
+        // start the draft
+        startDraft(message)
+
+        // Update the command response message
+        responseMessage.edit({ content: `You've started the draft, head on over to **${stored.eventChannel.name}** text channel!`, allowedMentions: { repliedUser: (replying === "true") }});
     }
 
     // catch all error message
