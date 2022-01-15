@@ -58,31 +58,51 @@ async function startDraft(message){
             try {
 
                 // prompt captain for selection
-                await eventChannel.send(`**Round #${i}**: ${team.name}, please make a selection.`)
+                await eventChannel.send(`**Round #${i}**: ${team.name}, please make a selection.  Remaining options:\n${picks.filter(player => !player.team).map((pick,i) => `(${i + 1}) ${pick.name}`).join('\n')}`)
 
-                // only respond to the team captain
-                const filter = m => m.author.id == team.id;
-                const collected = await eventChannel.awaitMessages({ filter, max: 1, time: 10000, errors: ['time'] })
+                let loop = true
+                while(loop){
+                    // only respond to the team captain
+                    const filter = m => m.author.id.toString() === team.id.toString();
+                    const collected = await eventChannel.awaitMessages({ filter, max: 1, time: 10000, errors: ['time'] })
 
-                // get response
-                const selectionIndex = collected.first().content
-                const selectedPlayer = picks[selectionIndex - 1]
+                    // get response
+                    const selectionIndex = collected.first().content
 
-                // update the selected player with their new team id
-                stored.players.find(player => player.id === selectedPlayer.id).team = team.id
-                players.find(player => player.id === selectedPlayer.id).team = team.id
-                picks[selectionIndex - 1].team = team.id
+                    // abort if bad input
+                    if(!picks.map((player, i) => i + 1).includes(Number(selectionIndex))){
+                        await eventChannel.send(`Bad input!  Must be a number between 1 and ${picks.length}.  Pick again.`)
+                        continue
+                    }
+                    else {
+                        const selectedPlayer = picks[selectionIndex - 1]
 
-                // update the team player (or deputy) array
-                if(selectedPlayer.role === 'deputy'){
-                    teams.find(t => team.id === t.id).deputies.push(selectedPlayer)
-                } else {
-                    teams.find(t => team.id === t.id).players.push(selectedPlayer)
+                        if(selectedPlayer.team) {
+                            await eventChannel.send(`**${selectedPlayer.name}** has already been selected!  Pick again.`)
+                            continue
+                        }
+                        else {
+                            // stop looping for this player since we have a valid pick
+                            loop = false
+
+                            // update the selected player with their new team id
+                            stored.players.find(player => player.id === selectedPlayer.id).team = team.id
+                            players.find(player => player.id === selectedPlayer.id).team = team.id
+                            picks[selectionIndex - 1].team = team.id
+
+                            // update the team player (or deputy) array
+                            if(selectedPlayer.role === 'deputy'){
+                                teams.find(t => team.id === t.id).deputies.push(selectedPlayer)
+                            } else {
+                                teams.find(t => team.id === t.id).players.push(selectedPlayer)
+                            }
+                        }
+                    }
                 }
-
             } catch (e) {
-                logger.log(e,'warn')
-                message.channel.send(`Draft aborted/timed out....no data was saved, please try again.`)
+                logger.log(e.message,'warn')
+                await eventChannel.send(`**An error has occured, the draft has been cancelled.** `)
+                await message.channel.send(`Draft aborted/timed out....no data was saved, please try again.`)
                 return
             }
         }
