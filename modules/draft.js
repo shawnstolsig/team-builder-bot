@@ -1,17 +1,16 @@
 const {getAnswers, postEmbed} = require("../modules/messaging");
 const logger = require("../modules/Logger");
-const { drafts } = require("../modules/enmaps");
-const { END_MESSAGES } = require("../modules/constants");
+const {drafts} = require("../modules/enmaps");
+const {END_MESSAGES} = require("../modules/constants");
 
-async function startDraft(message){
+async function startDraft(message) {
     const stored = drafts.get(message.channel.guild.id)
     const eventChannel = await message.guild.channels.fetch(stored.eventChannel.id)
 
     logger.log(`Draft Starting, data dump:`)
-    console.log(JSON.stringify(stored,null,4))
+    console.log(JSON.stringify(stored, null, 4))
 
     let captains = stored.teams.map(team => team.captain)
-    let teams = stored.teams
     let players = stored.players.filter(p => p.role !== 'captain')
     const rounds = Math.ceil(players.length / captains.length)
 
@@ -22,16 +21,14 @@ async function startDraft(message){
         description: `**How it works:**\nDuring each round of the draft, each team captain will select one player.  Team captains will select players in a randomized, from a randomized list of players.  Players with the same availability will be grouped together during each round of the draft.  The draft will conclude once all players have been assigned a team.\n\n**There will be ${rounds} rounds!**\n\n**Team Captains:**\n${captains.map(player => player.name).join('\n')}`
     })
 
-    for(let i = 1; i <= rounds; i++ ){
+    // loop through each round
+    for (let i = 1; i <= rounds; i++) {
 
         // shuffle team order and non-chosen players, then slice of the first n as the picks for the round
-        teams = shuffle(teams)
-        let picks = shuffle(players.filter(p => !p.team)).slice(0,teams.length)
+        let teams = shuffle([...stored.teams])
+        let picks = shuffle(players.filter(p => !p.team)).slice(0, teams.length)
 
         // TODO: Group participants of the same role during each round of drafts (add wildcard round?)
-        // TODO: Prevent selection of the same player
-        // TODO: Handle invalid captain input (get skipped)
-        // TODO: Automatically assign last player in each round?
         // TODO: Add mentions to captains when it's their turn to select
         // TODO: Add admin commands for changing player role
         // TODO: Update admin commands in general?  Change player team?
@@ -44,66 +41,98 @@ async function startDraft(message){
         const roundMessage = await postEmbed({
             guild: message.guild,
             title: `Round #${i}`,
-            description: `**Available Picks:**\n${picks.map((player,index) => `(${index+1}) -${player.name}`).join('\n')}`,
+            description: `**Available Picks:**\n${picks.map((player, index) => `(${index + 1}) -${player.name}`).join('\n')}`,
             fields: [
                 {
                     name: `Selection order:`,
-                    value: teams.map((team, index) => `#${index+1} -${team.name}`).join('\n')
+                    value: teams.map((team, index) => `#${index + 1} -${team.name}`).join('\n')
                 }
             ]
         })
 
-        // iterate through teams
-        for(let team of teams){
-            try {
+        // iterate through teams...note the teams will be removed as they make valid selections.
+        // using while loop so that teams can be infinitely re-ordered for failing to make valid pick
+        while(teams.length){
+            let team = teams[0]
 
-                // prompt captain for selection
-                await eventChannel.send(`**Round #${i}**: ${team.name}, please make a selection.  Remaining options:\n${picks.filter(player => !player.team).map((pick,i) => `(${i + 1}) ${pick.name}`).join('\n')}`)
+            // fetch captain's Member so that they can be mentioned
+            const captain = await message.guild.members.fetch(team.captain.id)
 
-                let loop = true
-                while(loop){
+            // prompt captain for selection
+            await eventChannel.send(`**Round #${i}**: ${captain.user.toString()}, please make a selection.  Remaining options:\n${picks.map((pick, i) => pick.team ? `~~(${i + 1}) ${pick.name}~~` : `(${i + 1}) ${pick.name}`).join('\n')}`)
+
+            // while looping message collector to handle bad input
+            let loop = true
+            while (loop) {
+
+                // error will be thrown if message collector times out
+                try {
+
                     // only respond to the team captain
                     const filter = m => m.author.id.toString() === team.id.toString();
-                    const collected = await eventChannel.awaitMessages({ filter, max: 1, time: 10000, errors: ['time'] })
+                    const collected = await eventChannel.awaitMessages({filter, max: 1, time: 10000, errors: ['time']})
 
                     // get response
                     const selectionIndex = collected.first().content
 
+                    // handle message to break out from draft
+                    if (END_MESSAGES.includes(collected.first().content.toLowerCase())) {
+                        await eventChannel.send("The draft has been cancelled.");
+                        loop = false
+                        return
+                    }
+
                     // abort if bad input
-                    if(!picks.map((player, i) => i + 1).includes(Number(selectionIndex))){
+                    if (!picks.map((player, i) => i + 1).includes(Number(selectionIndex))) {
                         await eventChannel.send(`Bad input!  Must be a number between 1 and ${picks.length}.  Pick again.`)
                         continue
                     }
+
+                    // valid player has been picked, proceed...
                     else {
+
+                        // get the player
                         const selectedPlayer = picks[selectionIndex - 1]
 
-                        if(selectedPlayer.team) {
-                            await eventChannel.send(`**${selectedPlayer.name}** has already been selected!  Pick again.`)
+                        // if player is already been chosen that round, bump that team captain to last pick
+                        if (selectedPlayer.team) {
+                            await eventChannel.send(`**${selectedPlayer.name}** has already been selected!  You've been moved to last pick for this round. `)
+                            const skipped = teams.shift()
+                            teams.push(skipped)
+                            loop = false
                             continue
                         }
-                        else {
-                            // stop looping for this player since we have a valid pick
-                            loop = false
 
+                        // if we have a valid player picked...
+                        else {
                             // update the selected player with their new team id
                             stored.players.find(player => player.id === selectedPlayer.id).team = team.id
                             players.find(player => player.id === selectedPlayer.id).team = team.id
                             picks[selectionIndex - 1].team = team.id
 
                             // update the team player (or deputy) array
-                            if(selectedPlayer.role === 'deputy'){
-                                teams.find(t => team.id === t.id).deputies.push(selectedPlayer)
+                            if (selectedPlayer.role === 'deputy') {
+                                stored.teams.find(t => team.id === t.id).deputies.push(selectedPlayer)
                             } else {
-                                teams.find(t => team.id === t.id).players.push(selectedPlayer)
+                                stored.teams.find(t => team.id === t.id).players.push(selectedPlayer)
                             }
+
+                            // stop looping for this player since we have a valid pick
+                            loop = false
+                            teams.shift()
+
                         }
                     }
+
                 }
-            } catch (e) {
-                logger.log(e.message,'warn')
-                await eventChannel.send(`**An error has occured, the draft has been cancelled.** `)
-                await message.channel.send(`Draft aborted/timed out....no data was saved, please try again.`)
-                return
+                // this catch occurs when message collector times out.  move captain to last pick of the round.
+                catch (e) {
+                    await eventChannel.send(`**${team.name}** took too long, they are now picking last this round. `)
+                    const skipped = teams.shift()
+                    teams.push(skipped)
+                    loop = false
+                }
+
             }
         }
     }
@@ -127,7 +156,7 @@ async function startDraft(message){
 
 // Uses Fisher-Yates algo to shuffle array
 function shuffle(array) {
-    let currentIndex = array.length,  randomIndex;
+    let currentIndex = array.length, randomIndex;
 
     // While there remain elements to shuffle...
     while (currentIndex != 0) {
@@ -143,6 +172,7 @@ function shuffle(array) {
 
     return array;
 }
+
 //
 // function createTeams(channel) {
 //     return new Promise(async (resolve, reject) => {
