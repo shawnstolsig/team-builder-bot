@@ -24,62 +24,6 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
         });
     }
 
-    // team building command: 'teams'
-    // else if (draftEvent === 'teams') {
-    //     if (!stored?.captainMessage?.id) {
-    //         message.reply({
-    //             content: `You must first use the **start** command to initiate a Team Building session.`,
-    //             allowedMentions: {repliedUser: (replying === "true")}
-    //         });
-    //         return
-    //     }
-    //
-    //     try {
-    //         const eventChannel = await message.guild.channels.fetch(stored.eventChannel.id, {force: true})
-    //         const captainMessage = await eventChannel.messages.fetch(stored.captainMessage.id, {force: true})
-    //
-    //         // get collections of users for each emoji that was used to react (Members are not available from reactions, so must traverse via User unfortunately)
-    //         const arrayOfUserCollections = await Promise.all(captainMessage.reactions.cache.map(reaction => reaction.users.fetch()))   // this resolves to an array container User collections
-    //
-    //         // flatten out each collection of user IDs into a single array
-    //         const reactedUserIds = []
-    //         arrayOfUserCollections.forEach(userCollection => {
-    //             userCollection.forEach(user => {
-    //                 reactedUserIds.push(user.id)
-    //             })
-    //         })
-    //
-    //         // pull the associated member for each userID who reacted
-    //         const teamsWithDisplayNames = await Promise.all([...new Set(reactedUserIds)].map(userId => getDisplayName(message, userId)))
-    //
-    //         // create the teams associated with each Member (who is the team captain)
-    //         const teams = teamsWithDisplayNames.map(member => ({
-    //             id: member.id,
-    //             name: member.displayName,
-    //             captain: {id: member.id, name: member.displayName},
-    //             players: []
-    //         }))
-    //
-    //         // edit/take down captainMessage
-    //         await captainMessage.suppressEmbeds(true)
-    //         await captainMessage.edit(`**Team registration has been completed.**  There were ${teams.length} signups!`)
-    //
-    //         // update data storage: add teams and remove the captain message
-    //         drafts.set(message.channel.guild.id, teams, "teams")
-    //         drafts.delete(message.channel.guild.id, "captainMessage")
-    //
-    //         message.reply({
-    //             content: `You've ended the team building session.  The post in **${stored.eventChannel.name}** has been edited.`,
-    //             allowedMentions: {repliedUser: (replying === "true")}
-    //         });
-    //         logger.log(`Finished: Team building`)
-    //     } catch (e) {
-    //         logger.log(e, 'warn')
-    //         message.channel.send('Unable to finish team building session.')
-    //     }
-    //
-    // }
-
     // player signup command: 'players'
     else if (draftEvent === 'players') {
 
@@ -177,7 +121,7 @@ exports.help = {
     name: "finish",
     category: "Team Building",
     description: "Finishes one of the draft events.",
-    usage: "finish <teams, players, draft>"
+    usage: "finish <players>"
 };
 
 

@@ -46,12 +46,12 @@ exports.conf = {
     enabled: true,
     guildOnly: true,
     aliases: [],
-    permLevel: "Administrator"
+    permLevel: "Bot Owner"
 };
 
 exports.help = {
     name: "print",
-    category: "Team Building",
+    category: "System",
     description: "Print teams, participants, captains, etc",
     usage: "print <thing to print>"
 };

@@ -38,12 +38,12 @@ exports.conf = {
     enabled: true,
     guildOnly: true,
     aliases: [],
-    permLevel: "Administrator"
+    permLevel: "Bot Owner"
 };
 
 exports.help = {
     name: "clear",
-    category: "Team Building",
+    category: "System",
     description: "Clear teams, participants, captains, etc",
     usage: "clear <thing to clear>"
 };

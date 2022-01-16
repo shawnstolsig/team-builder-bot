@@ -1,5 +1,6 @@
 const logger = require("../modules/Logger.js");
 const { settings } = require("../modules/settings.js");
+const { drafts } = require("../modules/enmaps.js");
 
 // This event executes when a new guild (server) is left.
 
@@ -12,5 +13,10 @@ module.exports = (client, guild) => {
   // No use keeping stale data!
   if (settings.has(guild.id)) {
     settings.delete(guild.id);
+  }
+
+  // Same with removing drafts
+  if (drafts.has(guild.id)) {
+    drafts.delete(guild.id);
   }
 };

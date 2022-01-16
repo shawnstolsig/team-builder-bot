@@ -37,12 +37,6 @@ async function startDraft(message) {
         const order = { deputy: 1, weekendPlayer: 2, saturdayPlayer: 3, sundayPlayer: 5 }
         let picks = shuffle(players.filter(p => !p.team).sort((a,b) => order[a.role] - order[b.role]).slice(0, teams.length))
 
-        // TODO: How to handle if bot crashes mid-draft??
-
-        // TODO: Add admin commands for changing player role
-        // TODO: Update admin commands in general?  Change player team?
-        // TODO: Update captain selection with player name
-
         // round start message, shows picking order and available picks
         const roundMessage = await postEmbed({
             guild: message.guild,
@@ -76,7 +70,7 @@ async function startDraft(message) {
 
                     // only respond to the team captain
                     const filter = m => m.author.id.toString() === team.id.toString();
-                    const collected = await eventChannel.awaitMessages({filter, max: 1, time: 10000, errors: ['time']})
+                    const collected = await eventChannel.awaitMessages({filter, max: 1, time: 30000, errors: ['time']})
 
                     // get response
                     const selectionIndex = collected.first().content
