@@ -3,6 +3,14 @@ const logger = require("../modules/Logger");
 const {drafts} = require("../modules/enmaps");
 const {END_MESSAGES} = require("../modules/constants");
 
+function getEmoji(role){
+    if (role === 'captain') return '👑';
+    else if (role === 'deputy') return '👮';
+    else if (role === 'weekendPlayer') return '2️⃣';
+    else if (role === 'saturdayPlayer') return '🇸';
+    else if (role === 'sundayPlayer') return '🇺';
+}
+
 async function startDraft(message) {
     const stored = drafts.get(message.channel.guild.id)
     const eventChannel = await message.guild.channels.fetch(stored.eventChannel.id)
@@ -26,22 +34,20 @@ async function startDraft(message) {
 
         // shuffle team order and non-chosen players, then slice of the first n as the picks for the round
         let teams = shuffle([...stored.teams])
-        let picks = shuffle(players.filter(p => !p.team)).slice(0, teams.length)
+        const order = { deputy: 1, weekendPlayer: 2, saturdayPlayer: 3, sundayPlayer: 5 }
+        let picks = shuffle(players.filter(p => !p.team).sort((a,b) => order[a.role] - order[b.role]).slice(0, teams.length))
 
-        // TODO: Group participants of the same role during each round of drafts (add wildcard round?)
-        // TODO: Add mentions to captains when it's their turn to select
+        // TODO: How to handle if bot crashes mid-draft??
+
         // TODO: Add admin commands for changing player role
         // TODO: Update admin commands in general?  Change player team?
         // TODO: Update captain selection with player name
-        // TODO: Handle when number of players doesn't divide evenly into teams
-        // TODO: Update roundMessage when player is picked
-        // TODO: How to handle if bot crashes mid-draft??
 
         // round start message, shows picking order and available picks
         const roundMessage = await postEmbed({
             guild: message.guild,
             title: `Round #${i}`,
-            description: `**Available Picks:**\n${picks.map((player, index) => `(${index + 1}) -${player.name}`).join('\n')}`,
+            description: `**Available Picks:**\n${picks.map((player, index) => `${getEmoji(player.role)} (${index + 1}) - ${player.name}`).join('\n')}`,
             fields: [
                 {
                     name: `Selection order:`,
@@ -59,7 +65,7 @@ async function startDraft(message) {
             const captain = await message.guild.members.fetch(team.captain.id)
 
             // prompt captain for selection
-            await eventChannel.send(`**Round #${i}**: ${captain.user.toString()}, please make a selection.  Remaining options:\n${picks.map((pick, i) => pick.team ? `~~(${i + 1}) ${pick.name}~~` : `(${i + 1}) ${pick.name}`).join('\n')}`)
+            await eventChannel.send(`**Round #${i}**: ${captain.user.toString()}, please make a selection.  Remaining options:\n${picks.map((pick, i) => pick.team ? `${getEmoji(pick.role)} ~~(${i + 1}) ${pick.name}~~` : `${getEmoji(pick.role)} (${i + 1}) ${pick.name}`).join('\n')}`)
 
             // while looping message collector to handle bad input
             let loop = true
@@ -121,6 +127,9 @@ async function startDraft(message) {
                             loop = false
                             teams.shift()
 
+                            // end round/draft if no more players available
+                            if(!stored.players.find(player => !player.team)) teams = [];
+
                         }
                     }
 
@@ -148,7 +157,7 @@ async function startDraft(message) {
         description: `-------------------`,
         fields: stored.teams.map(team => ({
             name: `Team ${team.name}`,
-            value: team.deputies.map(player => `${player.name} :police_officer:`).concat(team.players.map(player => player.name)).join('\n'),
+            value: team.deputies.map(player => `${getEmoji(player.role)} ${player.name}`).concat(team.players.map(player => `${getEmoji(player.role)} ${player.name}`)).join('\n'),
             inline: true
         }))
     })
@@ -173,49 +182,7 @@ function shuffle(array) {
     return array;
 }
 
-//
-// function createTeams(channel) {
-//     return new Promise(async (resolve, reject) => {
-//         await channel.send(`Team captains, please respond one at a time to register a team.  Anyone can type "stop" to end this process.`)
-//
-//         let teams = []
-//         let teamBuildingInProgress = true
-//
-//         while(teamBuildingInProgress){
-//
-//             try {
-//                 const filter = m => !!m.content;
-//                 const collected = await channel.awaitMessages({ filter, max: 1, time: 60000, errors: ['time'] })
-//
-//                 // end team building if stop message received
-//                 if (END_MESSAGES.includes(collected.first().content.toLowerCase())) {
-//                     await channel.send("Done making teams!");
-//                     teamBuildingInProgress = false
-//                 }
-//                 // else create team
-//                 else {
-//                     const res = collected.first()
-//                     teams.push({
-//                         captain: res.member,
-//                         name:  res.member.displayName,
-//                         players: [res.member]
-//                     })
-//                     await channel.send(`Team ${res.member.displayName} created!`)
-//                 }
-//             } catch (err) {
-//                 teamBuildingInProgress = false
-//                 const msg = "Error creating teams, aborting."
-//                 logger.log(msg, 'warn')
-//                 reject(msg)
-//             }
-//
-//         }
-//
-//         resolve(teams)
-//     })
-//
-// }
-
 module.exports = {
-    startDraft
+    startDraft,
+    getEmoji
 }

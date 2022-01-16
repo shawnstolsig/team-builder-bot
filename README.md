@@ -1,4 +1,4 @@
-# Guide Bot
+cç# Guide Bot
 
 A boilerplate of a Discord.js Bot Handler.
 Updated and Maintained by the [Idiot's Guide Community](https://discord.gg/vXVxsAjSMF).

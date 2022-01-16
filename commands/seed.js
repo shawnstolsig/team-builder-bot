@@ -80,12 +80,12 @@ exports.run = async (client, message, [...values], level) => {
                 "role": "saturdayPlayer",
                 "team": undefined
             },
-            {
-                "id": "759933859310993449",
-                "name": "WG Code URL",
-                "role": "saturdayPlayer",
-                "team": undefined
-            },
+            // {
+            //     "id": "759933859310993449",
+            //     "name": "WG Code URL",
+            //     "role": "saturdayPlayer",
+            //     "team": undefined
+            // },
             {
                 "id": "779729472642351155",
                 "name": "WoWs CB JSON",

@@ -1,8 +1,10 @@
 const config = require("../config.js");
 const { settings } = require("../modules/settings.js");
 const logger = require("../modules/Logger");
+
 const { drafts } = require("../modules/enmaps");
 const {postEmbed} = require("../modules/messaging");
+const { getEmoji } = require("../modules/draft");
 
 exports.run = async (client, message, [...values], level) => {
     const stored = drafts.get(message.channel.guild.id)
@@ -24,7 +26,7 @@ exports.run = async (client, message, [...values], level) => {
     if(stored?.teams?.length){
         const teamFields = stored.teams.map(team => ({
             name: `Team ${team.name}`,
-            value: team?.players?.length || team?.deputies?.length ? team.deputies.map(player => `${player.name} :police_officer:`).concat(team.players.map(player => player.name)).join('\n') : '(none)',
+            value: team?.players?.length || team?.deputies?.length ? team.deputies.map(player => `${getEmoji(player.role)} ${player.name}`).concat(team.players.map(player => `${getEmoji(player.role)} ${player.name}`)).join('\n') : '(none)',
             inline: true
         }))
         // putting a empty row in before adding the team fields
