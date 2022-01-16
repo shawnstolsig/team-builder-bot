@@ -20,7 +20,7 @@ exports.run = async (client, message, [ksc, ...values], level) => {
                 {
                     "id": "205547921029070849",
                     "name": "[KSC] manbear67",
-                    "role": "captain",
+                    "role": "sundayPlayer",
                     "team": undefined
                 },
                 {
@@ -44,6 +44,12 @@ exports.run = async (client, message, [ksc, ...values], level) => {
                 {
                     "id": "344679005208838145",
                     "name": "[KSC] Borla78",
+                    "role": "captain",
+                    "team": undefined
+                },
+                {
+                    "id": "185531244476497920",
+                    "name": "[KSC] Serpent Lord",
                     "role": "captain",
                     "team": undefined
                 },
