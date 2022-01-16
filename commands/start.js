@@ -130,6 +130,12 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
     }
 
     else if (draftEvent === 'draft'){
+        // abort if teams haven't been created signup hasn't started
+        if (!stored?.teams?.length) {
+            message.reply({ content: `Unable to start draft...teams haven't been created yet!`, allowedMentions: {repliedUser: (replying === "true")} });
+            return
+        }
+
         // abort if not enough players
         if (!stored?.players?.length > 1) {
             message.reply({ content: `Unable to create teams...not enough players!`, allowedMentions: {repliedUser: (replying === "true")} });

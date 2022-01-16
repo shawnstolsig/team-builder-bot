@@ -81,16 +81,26 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
                 }))
             }))
 
+            // remove duplicate players, working in order of the emoji (captain -> sundayOnly)
+            const allPlayers = players.flat()
+            for(let i = 0; i < allPlayers.length; i++){
+                for(let j = allPlayers.length - 1; j > i; j--){
+                    if(allPlayers[i].id === allPlayers[j].id){
+                        allPlayers.splice(j,1)
+                    }
+                }
+            }
+
             // edit/take down playerMessage
             await playerMessage.suppressEmbeds(true)
-            await playerMessage.edit(`**Player signup has been completed.**  There were ${players.flat().length} signups!`)
+            await playerMessage.edit(`**Player signup has been completed.**  There were ${allPlayers.length} signups!`)
 
             // update data storage: add players and remove the player message
-            drafts.set(message.channel.guild.id, players.flat(), "players")
+            drafts.set(message.channel.guild.id, allPlayers, "players")
             drafts.delete(message.channel.guild.id, "playerMessage")
 
             await responseMessage.edit({
-                content: `You've ended player signups.  The post in **${stored.eventChannel.name}** has been edited.  There were ${players.flat().length} signups!`,
+                content: `You've ended player signups.  The post in **${stored.eventChannel.name}** has been edited.  There were ${allPlayers.length} signups!`,
                 allowedMentions: {repliedUser: (replying === "true")}
             });
             logger.log(`Finished: Player signups`)
