@@ -108,7 +108,7 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
             // description: "**Please react to this message if you'd to participate!**\n\n**Note:** *Team Captains and Deputies should be available to participate on both days of the competition.*",
             description: "**Please react to this message if you'd to participate!**",
             fields: [
-                { name: '\u200B', value: '\u200B' },
+                // { name: '\u200B', value: '\u200B' },
                 { name: 'Team Captain', value: ":crown:" , inline: true },
                 { name: 'Deputy', value: ":police_officer:" , inline: true },
                 { name: 'Player', value: ":two: - Both days\n:regional_indicator_s: - Saturday only\n:regional_indicator_u: - Sunday only" , inline: true },
