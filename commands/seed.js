@@ -3,13 +3,13 @@ const { settings } = require("../modules/settings.js");
 const logger = require("../modules/Logger");
 const { drafts } = require("../modules/enmaps");
 
-exports.run = async (client, message, [ksc, ...values], level) => {
+exports.run = async (client, message, [...values], level) => {
     const replying = settings.ensure(message.guild.id, config.defaultSettings).commandReply;
 
     const responseMessage = await message.reply({ content: `Seeding...`, allowedMentions: { repliedUser: (replying === "true") }});
 
     // seed for Kill Steal discord server
-    if(ksc){
+    if(message.guild.id === '363410632759967744'){
         drafts.set(message.guild.id,{
             "eventChannel": {
                 "id": "915422811483422791",
@@ -185,12 +185,12 @@ exports.run = async (client, message, [ksc, ...values], level) => {
                     "role": "captain",
                     "team": "205547921029070849"
                 },
-                // {
-                //     "id": "915121292171173888",
-                //     "name": "CoKS",
-                //     "role": "weekendPlayer",
-                //     "team": undefined
-                // },
+                {
+                    "id": "932855770335281202",
+                    "name": "DevBot",
+                    "role": "weekendPlayer",
+                    "team": undefined
+                },
                 {
                     "id": "924824001501605968",
                     "name": "devbear",
@@ -236,15 +236,15 @@ exports.run = async (client, message, [ksc, ...values], level) => {
                 {
                     "id": "633110582865952799",
                     "name": "Track",
+                    "role": "captain",
+                    "team": undefined
+                },
+                {
+                    "id": "759933859310993449",
+                    "name": "WG Code URL",
                     "role": "saturdayPlayer",
                     "team": undefined
                 },
-                // {
-                //     "id": "759933859310993449",
-                //     "name": "WG Code URL",
-                //     "role": "saturdayPlayer",
-                //     "team": undefined
-                // },
                 {
                     "id": "779729472642351155",
                     "name": "WoWs CB JSON",

@@ -1,7 +1,7 @@
 const {getAnswers, postEmbed} = require("../modules/messaging");
 const logger = require("../modules/Logger");
 const {drafts} = require("../modules/enmaps");
-const {END_MESSAGES} = require("../modules/constants");
+const {END_MESSAGES, BOT_ADMIN} = require("../modules/constants");
 
 function getEmoji(role){
     if (role === 'captain') return '👑';
@@ -26,14 +26,21 @@ async function startDraft(message) {
     await postEmbed({
         guild: message.guild,
         title: `Draft Start`,
-        description: `**How it works:**\nDuring each round of the draft, each team captain will select one player.  Team captains will select players in a randomized, from a randomized list of players.  Players with the same availability will be grouped together during each round of the draft.  The draft will conclude once all players have been assigned a team.\n\n**There will be ${rounds} rounds!**\n\n**Team Captains:**\n${captains.map(player => player.name).join('\n')}`
+        // description: `**How it works:**\nDuring each round of the draft, each team captain will select one player.  Team captains will select players in a randomized, from a randomized list of players.  Players with the same availability will be grouped together during each round of the draft.  The draft will conclude once all players have been assigned a team.\n\n**There will be ${rounds} rounds!**\n\n**Team Captains:**\n${captains.map(player => player.name).join('\n')}`
+        description: `This will be a Batch Draft.  During each round of this draft, only a random subset of the player pool (a "batch") will be available to choose from.  The number of players per batch is always the same as the number of team captains participating in the draft (with the potential exception of the final draft round, if the number of players is not evenly divisible by the number of teams).\n\nThe selection order for the first round will be determined randomly.\n\nOnce per round, a team captain may use the "pass" command to move themselves to the end of the selection queue.  After all players of the batch have been chosen, the team selection order is reversed for the next round.\n\nRounds will continue until the player pool is exhausted.  Each team will select one player in every round.\n\n**There will be ${rounds} rounds!**\n\n**Team Captains:**\n${captains.map(player => player.name).join('\n')}`
     })
+
+    // shuffle team order
+    let teams = shuffle([...stored.teams].map(team => ({...team, passed: false})))
+    let nextRound = []
 
     // loop through each round
     for (let i = 1; i <= rounds; i++) {
 
-        // shuffle team order and non-chosen players, then slice of the first n as the picks for the round
-        let teams = shuffle([...stored.teams])
+        // reset pass variable
+        teams.forEach(t => t.passed = false)
+
+        // shuffle players to be picked at start of each round
         const order = { deputy: 1, weekendPlayer: 2, saturdayPlayer: 3, sundayPlayer: 5 }
         let picks = shuffle(players.filter(p => !p.team).sort((a,b) => order[a.role] - order[b.role]).slice(0, teams.length))
 
@@ -45,7 +52,7 @@ async function startDraft(message) {
             fields: [
                 {
                     name: `Selection order:`,
-                    value: teams.map((team, index) => `#${index + 1} -${team.name}`).join('\n')
+                    value: teams.map((team, index) => `${team.name}`).join('\n')
                 }
             ]
         })
@@ -69,8 +76,8 @@ async function startDraft(message) {
                 try {
 
                     // only respond to the team captain
-                    const filter = m => m.author.id.toString() === team.id.toString();
-                    const collected = await eventChannel.awaitMessages({filter, max: 1, time: 30000, errors: ['time']})
+                    const filter = m => m.author.id.toString() === team.id.toString() || BOT_ADMIN.includes(m.author.id.toString());
+                    const collected = await eventChannel.awaitMessages({filter, max: 1, time: 600000, errors: ['time']})
 
                     // get response
                     const selectionIndex = collected.first().content
@@ -80,6 +87,21 @@ async function startDraft(message) {
                         await eventChannel.send("The draft has been cancelled.");
                         loop = false
                         return
+                    }
+
+                    // handle skip
+                    else if (['skip', 'pass'].includes(collected.first().content.toLowerCase())){
+                        if(team.passed){
+                            await eventChannel.send(`You've already passed once this round.  Please select a player!`);
+                            continue
+                        }
+                        // make it so only one skip allowed
+                        team.passed = true
+                        await eventChannel.send(`You'll pick last this round.`);
+                        const skipped = teams.shift()
+                        teams.push(skipped)
+                        loop = false
+                        continue
                     }
 
                     // abort if bad input
@@ -96,10 +118,10 @@ async function startDraft(message) {
 
                         // if player is already been chosen that round, bump that team captain to last pick
                         if (selectedPlayer.team) {
-                            await eventChannel.send(`**${selectedPlayer.name}** has already been selected!  You've been moved to last pick for this round. `)
-                            const skipped = teams.shift()
-                            teams.push(skipped)
-                            loop = false
+                            await eventChannel.send(`**${selectedPlayer.name}** has already been selected!  Pick again. `)
+                            // const skipped = teams.shift()
+                            // teams.push(skipped)
+                            // loop = false
                             continue
                         }
 
@@ -119,6 +141,7 @@ async function startDraft(message) {
 
                             // stop looping for this player since we have a valid pick
                             loop = false
+                            nextRound.unshift(team)
                             teams.shift()
 
                             // end round/draft if no more players available
@@ -128,16 +151,23 @@ async function startDraft(message) {
                     }
 
                 }
-                // this catch occurs when message collector times out.  move captain to last pick of the round.
+                // this catch occurs when message collector times out.  abort draft if player absent for 10 min
                 catch (e) {
-                    await eventChannel.send(`**${team.name}** took too long, they are now picking last this round. `)
-                    const skipped = teams.shift()
-                    teams.push(skipped)
+                    // await eventChannel.send(`**${team.name}** took too long, they are now picking last this round. `)
+                    // const skipped = teams.shift()
+                    // teams.push(skipped)
+                    // loop = false
+                    await eventChannel.send("The draft has been cancelled.");
                     loop = false
+                    return
                 }
 
             }
         }
+
+        // update selection order
+        teams = [...nextRound]
+        nextRound = []
     }
 
     // store updated teams and players

@@ -74,6 +74,7 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
             notSelectedCaptains.forEach(captain => {
                 const p = stored.players.find(player => player.id === captain.id)
                 p.role = 'deputy'
+                p.team = undefined
             })
 
             // update the selected captain teams

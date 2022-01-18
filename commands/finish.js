@@ -58,6 +58,9 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
                     [...new Set(playerIds)].filter(userId => userId !== '915121292171173888').map(userId => getDisplayName(message, userId))
                 )
 
+                console.log(emoji)
+                console.log(playersWithDisplayNames)
+
                 // figure out the role based on emoji
                 let role
                 if (emoji === '👑') role = 'captain';
