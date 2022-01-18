@@ -69,4 +69,7 @@ You can use this site to help you generate a full OAuth Link, which includes a c
 [Permission Calculator](https://finitereality.github.io/permissions-calculator/?v=0)
 
 292058164288
-https://discord.com/oauth2/authorize?client_id=915121292171173888&permissions=292058164288&scope=bot
+https://discord.com/oauth2/authorize?client_id=915121292171173888&permissions=292058164288&scope=bot   -> CoKS
+https://discord.com/oauth2/authorize?client_id=932855770335281202&permissions=292058164288&scope=bot   -> devbot
+
+

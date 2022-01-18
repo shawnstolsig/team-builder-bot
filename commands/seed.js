@@ -168,14 +168,14 @@ exports.run = async (client, message, [ksc, ...values], level) => {
     // seed for manbear dev server
     else {
         // clear the event channel
-        const eventChannel = await message.guild.channels.fetch("924907526179418112")
+        const eventChannel = await message.guild.channels.fetch("932185861548810250")
         const messages = await eventChannel.messages.fetch({ limit: 100}).then(msgs => msgs.first(msgs.size))
         await Promise.all(messages.map(msg => msg.delete()))
 
         drafts.set(message.guild.id,{
             "eventChannel": {
-                "id": "924907526179418112",
-                "name": "event"
+                "id": "932185861548810250",
+                "name": "bot-signups"
             },
             "eventName": "Champion of Kill Steal",
             "players": [
@@ -185,12 +185,12 @@ exports.run = async (client, message, [ksc, ...values], level) => {
                     "role": "captain",
                     "team": "205547921029070849"
                 },
-                {
-                    "id": "915121292171173888",
-                    "name": "CoKS",
-                    "role": "weekendPlayer",
-                    "team": undefined
-                },
+                // {
+                //     "id": "915121292171173888",
+                //     "name": "CoKS",
+                //     "role": "weekendPlayer",
+                //     "team": undefined
+                // },
                 {
                     "id": "924824001501605968",
                     "name": "devbear",

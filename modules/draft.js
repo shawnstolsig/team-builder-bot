@@ -20,7 +20,7 @@ async function startDraft(message) {
 
     let captains = stored.teams.map(team => team.captain)
     let players = stored.players.filter(p => p.role !== 'captain')
-    const rounds = Math.ceil(players.length / captains.length)
+    const rounds = Math.ceil(players.filter(p => !p.team).length / captains.length)
 
     // post start message
     await postEmbed({
