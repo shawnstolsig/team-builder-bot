@@ -76,7 +76,10 @@ async function startDraft(message) {
                 try {
 
                     // only respond to the team captain
-                    const filter = m => m.author.id.toString() === team.id.toString() || BOT_ADMIN.includes(m.author.id.toString());
+                    const filter = m => m.author.id.toString() === team.id.toString()                                // author is team captain
+                                        || team.deputies.map(deputy => deputy.id).includes(m.author.id.toString())   // author is in deputy array
+                                        || BOT_ADMIN.includes(m.author.id.toString());                               // author is bot admin
+
                     const collected = await eventChannel.awaitMessages({filter, max: 1, time: 600000, errors: ['time']})
 
                     // get response
