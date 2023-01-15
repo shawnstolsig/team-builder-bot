@@ -194,7 +194,7 @@ exports.run = async (client, message, [draftEvent, ...values], level) => {
             guild: message.guild,
             title: `Player Signup`,
             // description: "**Please react to this message if you'd to participate!**\n\n**Note:** *Team Captains and Deputies should be available to participate on both days of the competition.*",
-            description: "**Please react to this message if you'd to participate!**",
+            description: "**Please react to this message if you'd like to participate!**",
             fields: [
                 // { name: '\u200B', value: '\u200B' },
                 {name: 'Team Captain', value: ":crown:", inline: true},

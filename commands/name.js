@@ -27,7 +27,7 @@ exports.run = async (client, message, name, level) => {
         await postEmbed({
             guild: message.guild,
             channel: message.channel,
-            title: 'Event Channel Set',
+            title: 'Event Name Set',
             description: `This event's name is set to **${eventName}**.`
         })
         logger.log(`Event name set: ${eventName}`)
